@@ -1,0 +1,4 @@
+/.env
+/.fb_refresh_token
+/lastID
+.idea/
