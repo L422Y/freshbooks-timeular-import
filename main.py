@@ -118,13 +118,13 @@ if entries and 0 < len(entries):
                         data={
                             "is_logged": True,
                             "duration": dur.total_seconds(),
-                            "note": "# %s — %s" % (te['activity']['name'], te['note']['text']),
+                            "note": "# %s - %s" % (te['activity']['name'], te['note']['text']),
                             "started_at": te['duration']['startedAt'],
                             "billable": True,
                             "billed": False,
                             "identity_id": freshBooksClient.current_user().identity_id,
                         })
-            print("%s\t%s\t%s\t%s — %s" % (
+            print("%s\t%s\t%s\t%s - %s" % (
                 task_start.date(),
                 te['id'],
                 str(dur).ljust(20, ' '),
