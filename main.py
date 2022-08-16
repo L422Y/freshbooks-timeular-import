@@ -8,7 +8,7 @@ from datetime import datetime, time as datetime_time, timedelta
 import sys
 
 if sys.version_info < (3, 6):
-    sys.exit("Python 3.6 or later is required.")
+    sys.exit('Python 3.6 or later is required.')
 
 load_dotenv()
 freshBooksClient = None
@@ -48,12 +48,12 @@ else:
         'user:clients:read'
     ])
 
-    print(f"Go to this URL to authorize: {auth_url}")
-    auth_code = input("Enter the code you get after authorization: ")
+    print('Go to this URL to authorize: %s' % auth_url)
+    auth_code = input('Enter the code you get after authorization: ')
     token_response = freshBooksClient.get_access_token(auth_code)
 
-    print(f"This is the access token the client is now configurated with: {token_response.access_token}")
-    print(f"It is good until {token_response.access_token_expires_at}")
+    print('This is the access token the client is now configurated with: %s' % token_response.access_token)
+    print('It is good until %s' % token_response.access_token_expires_at)
     print()
 
     Path('.fb_refresh_token').write_text(token_response.refresh_token)
@@ -68,9 +68,9 @@ account_id = biz.account_id
 
 # auth / get token
 def get_timeular_token():
-    url = "https://api.timeular.com/api/v3/developer/sign-in"
+    url = 'https://api.timeular.com/api/v3/developer/sign-in'
     response = request(
-        "POST", url,
+        'POST', url,
         headers={'Content-Type': 'application/json'},
         data=dumps({
             "apiKey": getenv('TIMEULAR_KEY'),
@@ -83,8 +83,8 @@ def get_timeular_token():
 # get entries
 def get_timeular_entries(begin, end):
     response = request(
-        "GET",
-        "https://api.timeular.com/api/v2/time-entries/%sT00:00:00.000/%sT00:00:00.000" % (begin, end),
+        'GET',
+        'https://api.timeular.com/api/v2/time-entries/%sT00:00:00.000/%sT00:00:00.000' % (begin, end),
         headers={'Authorization': 'Bearer %s' % get_timeular_token()}
     )
     items = loads(response.text)['timeEntries']
@@ -118,8 +118,8 @@ if entries and 0 < len(entries):
                         data={
                             "is_logged": True,
                             "duration": dur.total_seconds(),
-                            "note": f"# {te['activity']['name']} — {te['note']['text']}",
-                            "started_at": f"{te['duration']['startedAt']}",
+                            "note": "# %s — %s" % (te['activity']['name'], te['note']['text']),
+                            "started_at": te['duration']['startedAt'],
                             "billable": True,
                             "billed": False,
                             "identity_id": freshBooksClient.current_user().identity_id,
@@ -134,6 +134,6 @@ if entries and 0 < len(entries):
             if int(te['id']) > biggestId:
                 biggestId = int(te['id'])
 
-    Path('lastID').write_text(str(biggestId))
+            Path('lastID').write_text(str(biggestId))
 else:
     print('No new entries since last run.')
