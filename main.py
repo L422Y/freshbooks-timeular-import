@@ -17,6 +17,7 @@ if Path('lastID').exists():
 # FRESHBOOKS
 fb_id = getenv('FB_CLIENT_ID')
 fb_secret = getenv('FB_CLIENT_SECRET')
+fb_redirect_uri = getenv('FB_REDIR_URI')
 
 if Path('.fb_refresh_token').exists():
     fb_refresh_token = Path('.fb_refresh_token').read_text()
@@ -24,7 +25,7 @@ if Path('.fb_refresh_token').exists():
         client_id=fb_id,
         client_secret=fb_secret,
         refresh_token=fb_refresh_token,
-        redirect_uri="https://l422y.com/"
+        redirect_uri=fb_redirect_uri
     )
     auth_results = freshBooksClient.refresh_access_token(fb_refresh_token)
     Path('.fb_refresh_token').write_text(auth_results.refresh_token)
@@ -32,7 +33,7 @@ else:
     freshBooksClient = Client(
         client_id=fb_id,
         client_secret=fb_secret,
-        redirect_uri="https://l422y.com/"
+        redirect_uri=fb_redirect_uri
     )
 
     auth_url = freshBooksClient.get_auth_request_url([
