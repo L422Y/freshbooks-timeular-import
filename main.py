@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 from pathlib import Path
 from freshbooks import Client
 from datetime import datetime, time as datetime_time, timedelta
+import sys
+
+if sys.version_info < (3, 6):
+    sys.exit("Python 3.6 or later is required.")
 
 load_dotenv()
 freshBooksClient = None
