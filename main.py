@@ -118,7 +118,7 @@ if entries and 0 < len(entries):
                         data={
                             "is_logged": True,
                             "duration": dur.total_seconds(),
-                            "note": "# %s — %s" % (te['activity']['name'], te['note']['text']),
+                            "note": "# %s - %s" % (te['activity']['name'], te['note']['text']),
                             "started_at": te['duration']['startedAt'],
                             "billable": True,
                             "billed": False,
