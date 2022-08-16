@@ -15,8 +15,8 @@ if Path('lastID').exists():
     lastId = int(Path('lastID').read_text())
 
 # FRESHBOOKS
-fb_id = os.getenv('FB_CLIENT_ID')
-fb_secret = os.getenv('FB_CLIENT_SECRET')
+fb_id = getenv('FB_CLIENT_ID')
+fb_secret = getenv('FB_CLIENT_SECRET')
 
 if Path('.fb_refresh_token').exists():
     fb_refresh_token = Path('.fb_refresh_token').read_text()
@@ -64,25 +64,25 @@ account_id = biz.account_id
 # auth / get token
 def get_timeular_token():
     url = "https://api.timeular.com/api/v3/developer/sign-in"
-    response = requests.request(
+    response = request(
         "POST", url,
         headers={'Content-Type': 'application/json'},
-        data=json.dumps({
-            "apiKey": os.getenv('TIMEULAR_KEY'),
-            "apiSecret": os.getenv('TIMEULAR_SECRET')
+        data=dumps({
+            "apiKey": getenv('TIMEULAR_KEY'),
+            "apiSecret": getenv('TIMEULAR_SECRET')
         })
     )
-    return json.loads(response.text)['token']
+    return loads(response.text)['token']
 
 
 # get entries
 def get_timeular_entries(begin, end):
-    response = requests.request(
+    response = request(
         "GET",
         "https://api.timeular.com/api/v2/time-entries/%sT00:00:00.000/%sT00:00:00.000" % (begin, end),
         headers={'Authorization': 'Bearer %s' % get_timeular_token()}
     )
-    items = json.loads(response.text)['timeEntries']
+    items = loads(response.text)['timeEntries']
     return items.sort(key=lambda x: x['duration']['startedAt'])
 
 
@@ -99,7 +99,7 @@ def time_diff(start, end):
         return end - start
 
 
-entries = get_timeular_entries(os.getenv('START_DATE'), os.getenv('END_DATE'))
+entries = get_timeular_entries(getenv('START_DATE'), getenv('END_DATE'))
 
 if entries and 0 < len(entries):
     biggestId = lastId
