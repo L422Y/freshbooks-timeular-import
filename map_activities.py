@@ -1,7 +1,7 @@
 import pprint
 import sys
 from os import getenv
-from freshbooks import FilterBuilder
+from freshbooks import FilterBuilder, VisState
 from dotenv import load_dotenv
 from pathlib import Path
 from json import dumps
@@ -22,7 +22,7 @@ account_id = biz.account_id
 client_user_id = identity.identity_id
 
 fb_filter = FilterBuilder()
-fb_filter.boolean("active", True)
+fb_filter.equals("vis_state", VisState.ACTIVE)
 clients = freshbooks_client.clients.list(account_id, builders=[fb_filter])
 clients = clients.data['clients']
 
