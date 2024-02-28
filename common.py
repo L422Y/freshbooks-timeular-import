@@ -7,13 +7,18 @@ from os import getenv
 from json import loads, dumps
 from dotenv import load_dotenv
 from datetime import datetime, time as datetime_time, timedelta
+from sqlite3 import connect
 import sys
 
 load_dotenv()
 ts_format = '%Y-%m-%dT%H:%M:%S.%f'
 
+dbPath = Path('timeular.sqlite3')
+db = connect(dbPath)
+c = db.cursor()
+c.execute('CREATE TABLE IF NOT EXISTS processed_items (id int, date text, activity_id int)')
 
-# auth / get token
+
 def get_timeular_token():
     url = 'https://api.timeular.com/api/v3/developer/sign-in'
     response = request(
@@ -70,7 +75,7 @@ def init_freshbooks_client():
     return freshbooks_client
 
 
-def send_entries_to_freshbooks(freshbooks_client, entries):
+def send_entries_to_freshbooks(freshbooks_client, activities, entries):
     identity = freshbooks_client.current_user()
     biz = identity.business_memberships[0].business
     business_id = biz.id
@@ -84,54 +89,68 @@ def send_entries_to_freshbooks(freshbooks_client, entries):
         if Path('.activitymap.json').exists():
             activity_map = loads(Path('.activitymap.json').read_text())
 
-        last_id = 0
-        if Path('lastID').exists():
-            last_id = int(Path('lastID').read_text())
-
-        biggest_id = last_id
         for te in entries:
-            if int(last_id) < int(te['id']):
+            activity_id = te['activityId']
+            entry_id = te['id']
+
+            c.execute('SELECT id FROM processed_items WHERE id = ?', (entry_id,))
+            if c.fetchone() is None:
+                activity = next((a for a in activities if a['id'] == activity_id), None)
+
                 task_start = datetime.strptime(te['duration']['startedAt'], ts_format)
                 task_end = datetime.strptime(te['duration']['stoppedAt'], ts_format)
                 dur = time_diff(task_start, task_end)
                 data = {
                     "is_logged": True,
                     "duration": dur.total_seconds(),
-                    "note": "# %s - %s" % (te['activity']['name'], te['note']['text']),
+                    "note": "# %s - %s" % (activity['name'], te['note']['text']),
                     "started_at": te['duration']['startedAt'],
                     "billable": True,
                     "billed": False,
                     "identity_id": freshbooks_client.current_user().identity_id,
                 }
 
-                activity_id = te['activity']['id']
                 if activity_id in activity_map:
                     data['client_id'] = str(activity_map[activity_id])
+                else:
+                    print('No mapping for %s (%s)' % te['activity']['name'], activity_id)
 
-                freshbooks_client.time_entries.create(
-                    business_id=business_id,
-                    data=data)
+                freshbooks_client.time_entries.create(business_id=business_id, data=data)
                 print("%s\t%s\t%s\t%s - %s" % (
                     task_start.date(),
                     te['id'],
                     str(dur).ljust(20, ' '),
-                    te['activity']['name'],
+                    activity['name'],
                     te['note']['text'])
                       )
-                if int(te['id']) > biggest_id:
-                    biggest_id = int(te['id'])
-
-                Path('lastID').write_text(str(biggest_id))
+                try:
+                    c.execute('INSERT INTO processed_items (id, date, activity_id) VALUES (?, ?, ?)',
+                              (te['id'], task_start.date(), activity_id))
+                    db.commit()
+                except Exception as e:
+                    print(e)
     else:
         print('No new entries since last run.')
+
+
+def get_timeular_activities(token):
+    response = request(
+        'GET',
+        'https://api.timeular.com/api/v3/activities',
+        headers={'Authorization': 'Bearer %' % token}
+    )
+    items = loads(response.text)['activities']
+    return items
 
 
 def get_timeular_entries(token, begin, end):
     response = request(
         'GET',
-        'https://api.timeular.com/api/v2/time-entries/%sT00:00:00.000/%sT00:00:00.000' % (begin, end),
+        'https://api.timeular.com/api/v3/time-entries/%sT00:00:00.000/%sT00:00:00.000' % (begin, end),
         headers={'Authorization': 'Bearer %s' % token}
     )
+
+    pprint.pp(response.text)
     items = loads(response.text)['timeEntries']
     items.sort(key=lambda x: x['duration']['startedAt'])
     return items

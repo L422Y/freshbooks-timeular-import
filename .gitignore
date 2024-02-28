@@ -3,3 +3,5 @@
 /lastID
 .idea/
 .activitymap.json
+timeular.sqlite3
+import-time.sh
