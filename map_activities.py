@@ -28,6 +28,9 @@ clients = clients.data['clients']
 
 activities = get_timeular_activities(timeular_token)
 
+pprint.pp(clients)
+pprint.pp(activities)
+
 activity_map = {}
 
 print("Mapping Timeular Activities...")
